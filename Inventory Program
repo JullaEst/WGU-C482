@@ -1,0 +1,42 @@
+package Main;
+
+import Model.*;
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+
+public class InventoryProgram extends Application {
+
+    @Override
+    public void start(Stage primaryStage) throws Exception{
+        Parent root = FXMLLoader.load(getClass().getResource("/View_Controller/MainScreen.fxml"));
+        primaryStage.setTitle("Inventory Management System");
+        primaryStage.setScene(new Scene(root, 1200, 600));
+        primaryStage.show();
+    }
+
+    //created part and added to inventory (test data)
+    public static void main(String[] args) {
+        InHouse P1 = new InHouse(Part.getNextPartId(), "Hello", 10, 2.00, 1, 20, 123);
+        Inventory.addPart(P1);
+
+        Product P2 = new Product(Product.getNextID(), "Bye", 20, 4, 8, 40);
+        P2.addAssociatedPart(P1);
+        Inventory.addProduct(P2);
+
+        OutSourced P3 = new OutSourced(Part.getNextPartId(), "Later", 30, 6, 2, 40, "Papers");
+        Inventory.addPart(P3);
+        P2.addAssociatedPart(P3);
+
+        Inventory.addPart (new InHouse(Part.getNextPartId(), "Morning", 25, 5.00, 0, 15, 456)); //condensed version of lines 22-23 & 29-31
+
+        Inventory.addProduct(new Product (Product.getNextID(), "Good night", 35, 8, 10, 50)); //condensed version of lines 25-27
+
+
+
+        launch(args);
+    }
+}
+
