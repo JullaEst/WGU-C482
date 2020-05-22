@@ -1,0 +1,115 @@
+package Model;
+
+import com.sun.deploy.net.MessageHeader;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+
+import java.net.URL;
+import java.util.ResourceBundle;
+
+public class Inventory implements Initializable {
+
+    private static final ObservableList<Part> allParts = FXCollections.observableArrayList();
+    private static final ObservableList<Product> allProducts = FXCollections.observableArrayList();
+
+    public static void addPart(Part newPart) {
+        allParts.add(newPart);
+    }
+
+    public static void addProduct(Product newProduct) {
+        allProducts.add(newProduct);
+    }
+
+    //lookup part
+    public static Part lookupPart(int partID) {
+        for (Part part : allParts) {
+            if (part.getId() == partID) {
+                return part;
+            }
+        }
+        return null;
+    }
+
+    public static ObservableList <Part> lookupPart(String partName) {
+        ObservableList<Part> partsNames = FXCollections.observableArrayList();
+
+        for (Part pn : allParts) {
+            if (pn.getName().contains(partName)) {
+                partsNames.add(pn);
+            }
+        }
+        return partsNames;
+    }
+
+    //lookup product
+    public static Product lookupProduct(int productID) {
+        for (Product product : allProducts) {
+            if (product.getId() == productID) {
+                return product;
+            }
+        }
+        return null;
+    }
+
+    public static ObservableList <Product> lookupProduct(String prodName) {
+        ObservableList<Product> pdNames = FXCollections.observableArrayList();
+
+        for (Product pd : allProducts) {
+            if (pd.getName().contains(prodName)) {
+                pdNames.add(pd);
+            }
+        }
+        return pdNames;
+    }
+
+    //update(replacing) part
+    public static void updatePart(Integer index, Part selectPart) {
+        allParts.set(index, selectPart);
+    }
+
+    //update (replacing) product
+    public static void updateProduct(Integer index, Product newProduct) {
+        allProducts.set(index, newProduct);
+    }
+
+    //delete part
+    public static boolean deletePart(int selectPart) {
+        for (Part part : allParts) {
+            if (part.getId() == selectPart) {
+                allParts.remove(part);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //delete product
+    public static boolean deleteProduct(int selectProduct) {
+        for (Product product : allProducts) {
+            if (product.getId() == selectProduct) {
+                allProducts.remove(product);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //getters
+    public static ObservableList<Part> getAllParts() {
+        return allParts;
+    }
+
+    public static ObservableList<Product> getAllProducts() {
+        return allProducts;
+    }
+
+    public static void modifyPart(InHouse inHouse) {
+    }
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+
+    }
+}
