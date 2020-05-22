@@ -1,0 +1,217 @@
+package View_Controller;
+
+import Model.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Stage;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
+
+public class ModifyProductController implements Initializable {
+
+
+    public TableView <Part> APTable1;
+    public TableView <Part> APTable2;
+    public Button Search;
+
+    //text fields
+    @FXML private TextField ModifyProductID;
+    @FXML private TextField ModifyProductName;
+    @FXML private TextField ModifyProductMin;
+    @FXML private TextField ModifyProductInv;
+    @FXML private TextField ModifyProductPrice;
+    @FXML private TextField ModifyProductMax;
+    @FXML private TextField SearchText;
+    @FXML private TextField CompanyName;
+
+    //table columns
+    @FXML private TableColumn<Part, Integer> IDCol1;
+    @FXML private TableColumn<Part, String> NameCol1;
+    @FXML private TableColumn<Part, Integer> InvCol1;
+    @FXML private TableColumn<Part, Double> PriceCol1;
+
+    @FXML private TableColumn<Part, Integer> IDCol2;
+    @FXML private TableColumn<Part, String> NameCol2;
+    @FXML private TableColumn<Part, Double> PriceCol2;
+    @FXML private TableColumn<Part, Integer> InvCol2;
+
+    //buttons
+    @FXML private Button SaveProduct;
+    @FXML private Button CancelProduct;
+    @FXML private Button SearchButton;
+    @FXML private Button AddProduct;
+    @FXML private Button DeleteProduct;
+
+    //table views
+    @FXML private TableView<Part> partSearchTable;
+
+    Part part;
+    Integer productIndex = null;
+
+    ObservableList<Part> partList = FXCollections.observableArrayList();
+    ObservableList<Part> partSelected = FXCollections.observableArrayList();
+
+
+    public void OnCancelButton(ActionEvent event) throws IOException {
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Do you want to cancel your changes?",
+                ButtonType.OK,
+                ButtonType.CANCEL);
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                Parent partPage = null;
+
+                try {
+                    partPage = FXMLLoader.load(getClass().getResource("/View_Controller/MainScreen.fxml"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                Scene partScene = new Scene(partPage);
+
+                Stage window = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+                window.setScene(partScene);
+                window.show();
+
+            }
+
+        });
+
+    }
+
+    public void OnSaveButton(ActionEvent event) throws IOException {
+
+        int id = Integer.parseInt(ModifyProductID.getText()); //reuse product ID
+        String name = ModifyProductName.getText();
+        int inv = Integer.parseInt(ModifyProductInv.getText());
+        double price = Double.parseDouble(ModifyProductPrice.getText());
+        int min = Integer.parseInt(ModifyProductMin.getText());
+        int max = Integer.parseInt(ModifyProductMax.getText());
+
+        if (min > max) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Value is invalid.");
+            alert.setHeaderText("Minimum value can not be greater than maximum value.");
+            alert.showAndWait();
+
+        } else if (min < max) {
+            Product newProduct = new Product(id, name, inv, price, min, max);
+            Inventory.updateProduct(productIndex, newProduct); //update product (how to get product index) look at modify part update
+
+            newProduct.getAllAssociatedParts().addAll(partSelected); //take all parts in APTable2
+
+
+            Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
+            Parent saved = FXMLLoader.load(getClass().getResource("/View_Controller/MainScreen.fxml"));
+            Scene scene = new Scene(saved);
+            stage.setScene(scene);
+            stage.show();
+        }
+
+    }
+
+    public void SearchButton (ActionEvent event) throws IOException {
+
+        String pdText = SearchText.getText();
+        ObservableList<Part> st = Inventory.lookupPart(pdText);
+
+        //check product id
+        if (st.isEmpty()) {
+            try {
+                int id = Integer.parseInt(pdText);
+                Part search = Inventory.lookupPart(id);
+
+                if (search != null) {
+                    st.add(search);
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Try to convert to ID");
+            }
+        }
+        APTable1.setItems(st);
+    }
+
+    public void OnAddButton (ActionEvent event){
+        Part part = APTable1.getSelectionModel().getSelectedItem();
+
+        if (part == null)
+            return;
+
+        partSelected.add(part);
+    }
+
+    public void OnDeleteButton (ActionEvent event){
+
+        Part part = APTable2.getSelectionModel().getSelectedItem();
+
+        if (part == null)
+            return;
+
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Do you want to delete this part?",
+                ButtonType.OK,
+                ButtonType.CANCEL);
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+
+                partSelected.remove(part);
+
+            }
+        });
+    }
+
+
+    @Override
+    public void initialize (URL location, ResourceBundle resources){
+
+        IDCol1.setCellValueFactory(new PropertyValueFactory<>("id"));
+        NameCol1.setCellValueFactory(new PropertyValueFactory<>("name"));
+        InvCol1.setCellValueFactory(new PropertyValueFactory<>("stock"));
+        PriceCol1.setCellValueFactory(new PropertyValueFactory<>("price"));
+
+        APTable1.setItems(Inventory.getAllParts());
+
+        IDCol2.setCellValueFactory(new PropertyValueFactory<>("id"));
+        NameCol2.setCellValueFactory(new PropertyValueFactory<>("name"));
+        InvCol2.setCellValueFactory(new PropertyValueFactory<>("stock"));
+        PriceCol2.setCellValueFactory(new PropertyValueFactory<>("price"));
+
+        APTable2.setItems(partSelected);
+
+    }
+
+    public void setProduct(Product productSelected) {
+
+        productIndex = Inventory.getAllProducts().indexOf(productSelected);
+
+        ModifyProductID.setText(Integer.toString(productSelected.getId())); //convert int to string
+        ModifyProductName.setText(productSelected.getName());
+        ModifyProductMin.setText(Integer.toString(productSelected.getMin()));
+        ModifyProductInv.setText(Integer.toString(productSelected.getStock()));
+        ModifyProductPrice.setText(Double.toString(productSelected.getPrice()));
+        ModifyProductMax.setText(Integer.toString(productSelected.getMax()));
+
+        ObservableList<Part> productList = productSelected.getAllAssociatedParts();
+        partSelected.addAll(productList);
+
+        }
+
+    public void OnSearchText(ActionEvent actionEvent) {
+    }
+}
+
+
