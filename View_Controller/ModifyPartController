@@ -1,0 +1,207 @@
+package View_Controller;
+
+import Model.InHouse;
+import Model.Inventory;
+import Model.OutSourced;
+import Model.Part;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.fxml.FXML;
+import javafx.stage.Stage;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
+
+public class ModifyPartController implements Initializable {
+
+        public Label ModifyPartCoNm;
+        @FXML private RadioButton ModifyPartInHouse;
+        @FXML private RadioButton ModifyPartOutsourced;
+        @FXML private ToggleGroup InHouseTG;
+
+        @FXML private TextField ModifyPartID;
+        @FXML private TextField ModifyPartName;
+        @FXML private TextField ModifyPartMin;
+        @FXML private TextField ModifyPartInv;
+        @FXML private TextField ModifyPartPrice;
+        @FXML private TextField ModifyPartMax;
+        @FXML private TextField CompanyName;
+
+        @FXML private Button SaveButton;
+        @FXML private Button CancelButton;
+
+        Parent scene;
+        Stage stage;
+        Integer partIndex= 0;
+
+    public static void getScene() {
+    }
+
+    public void OnCancelButton(ActionEvent event) throws IOException {
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Do you want to ignore your changes?",
+                ButtonType.OK,
+                ButtonType.CANCEL);
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                Parent partPage = null;
+
+                try {
+                    partPage = FXMLLoader.load(getClass().getResource("/View_Controller/MainScreen.fxml"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                Scene partScene = new Scene(partPage);
+
+                Stage window = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+                window.setScene(partScene);
+                window.show();
+
+            }
+
+
+        });
+    }
+
+    public void OnSaveButton(ActionEvent event) throws IOException {
+
+        int min = Integer.parseInt(ModifyPartMin.getText());
+        int max = Integer.parseInt(ModifyPartMax.getText());
+
+        if (min > max) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Value is invalid.");
+            alert.setHeaderText("Minimum value can not be greater than maximum value.");
+            alert.showAndWait();
+
+            return; }
+
+        if (ModifyPartInHouse.isSelected() && Integer.parseInt(ModifyPartInv.getText()) >= Integer.parseInt(ModifyPartMin.getText()) && Integer.parseInt(ModifyPartMin.getText()) <= Integer.parseInt(ModifyPartMax.getText())) {
+            saveInHouse();
+
+            stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
+            scene = FXMLLoader.load(getClass().getResource("/View_Controller/MainScreen.fxml"));
+            stage.setScene(new Scene(scene));
+            stage.show();
+
+        } else if (ModifyPartOutsourced.isSelected() && Integer.parseInt(ModifyPartInv.getText()) >= Integer.parseInt(ModifyPartMin.getText()) && Integer.parseInt(ModifyPartMin.getText()) <= Integer.parseInt(ModifyPartMax.getText())) {
+            saveOutSourced();
+
+            stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
+            scene = FXMLLoader.load(getClass().getResource("/View_Controller/MainScreen.fxml"));
+            stage.setScene(new Scene(scene));
+            stage.show();
+
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Value is invalid.");
+            alert.setContentText("Inventory must be between Minimum and Maximum value.");
+            alert.showAndWait();
+        }
+
+    }
+
+    public void saveInHouse() {
+        int id = Integer.parseInt(ModifyPartID.getText());
+        String name = ModifyPartName.getText();
+        int inv = Integer.parseInt(ModifyPartInv.getText());
+        Double price = Double.parseDouble(ModifyPartInv.getText());
+        int max = Integer.parseInt(ModifyPartMax.getText());
+        int min = Integer.parseInt(ModifyPartMin.getText());
+        int machineId = Integer.parseInt(CompanyName.getText());
+
+        Inventory.updatePart(partIndex,  new InHouse(id, name, inv, price, min, max, machineId));
+
+    }
+
+    private void saveOutSourced() {
+        int id = Integer.parseInt(ModifyPartID.getText());
+        String name = ModifyPartName.getText();
+        int inv = Integer.parseInt(ModifyPartInv.getText());
+        Double price = Double.parseDouble(ModifyPartInv.getText());
+        int max = Integer.parseInt(ModifyPartMax.getText());
+        int min = Integer.parseInt(ModifyPartMin.getText());
+        String companyNm = (CompanyName.getText());
+
+        Inventory.updatePart(partIndex, new OutSourced(id, name, inv, price, min, max, companyNm));
+    }
+
+    public void createNewPart() {
+        if (ModifyPartInHouse.isSelected()) {
+            Part newPart = new InHouse(Part.getNextPartId(),
+                    ModifyPartName.getText(),
+                    Integer.parseInt(ModifyPartInv.getText()),
+                    Double.parseDouble(ModifyPartPrice.getText()),
+                    Integer.parseInt(ModifyPartMin.getText()),
+                    Integer.parseInt(ModifyPartMax.getText()),
+                    Integer.parseInt(CompanyName.getText())); //create int from string
+
+            Inventory.addPart(newPart);
+        } else if (ModifyPartOutsourced.isSelected()) {
+            Part newPart = new OutSourced(Part.getNextPartId(),
+                    ModifyPartName.getText(),
+                    Integer.parseInt(ModifyPartInv.getText()),
+                    Double.parseDouble(ModifyPartPrice.getText()),
+                    Integer.parseInt(ModifyPartMin.getText()),
+                    Integer.parseInt(ModifyPartMax.getText()),
+                    CompanyName.getText()); //string, only get text
+
+            Inventory.addPart(newPart);
+        }
+    }
+
+    public void OnModifyPartInHouse (ActionEvent event) {
+            ModifyPartCoNm.setText("Machine Id");
+            CompanyName.setPromptText("Machine Id");
+    }
+    public void OnModifyPartOutsourced(ActionEvent event) {
+            ModifyPartCoNm.setText("Company Name");
+            CompanyName.setPromptText("Company Name");
+    }
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+
+    }
+
+    public void setPart(Part partSelected) {
+        //getting index of part(what is the position of this part)
+        partIndex = Inventory.getAllParts().indexOf(partSelected);
+
+        ModifyPartID.setText(Integer.toString(partSelected.getId())); //convert int to string
+        ModifyPartName.setText(partSelected.getName());
+        ModifyPartMin.setText(Integer.toString(partSelected.getMin()));
+        ModifyPartInv.setText(Integer.toString(partSelected.getStock()));
+        ModifyPartPrice.setText(Double.toString(partSelected.getPrice()));
+        ModifyPartMax.setText(Integer.toString(partSelected.getMax()));
+
+
+        if (partSelected instanceof InHouse) {
+            ModifyPartInHouse.setSelected(true);
+            InHouse ih = (InHouse) partSelected;
+            CompanyName.setText(Integer.toString(ih.getMachineID()));
+            ModifyPartCoNm.setText("Machine Id");
+            CompanyName.setPromptText("Machine Id");
+
+        } else {
+
+            if (partSelected instanceof OutSourced) {
+                ModifyPartOutsourced.setSelected(true);
+                OutSourced os = (OutSourced) partSelected; //cast changed type of partSelected
+                CompanyName.setText(os.getCompanyName());
+                ModifyPartCoNm.setText("Company Name");
+                CompanyName.setPromptText("Company Name");
+            }
+
+        }
+    }
+}
