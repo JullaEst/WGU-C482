@@ -1,0 +1,25 @@
+package Model;
+
+public class InHouse extends Part {
+
+    private int machineID;
+
+    //part constructor
+    public  InHouse  (int partID, String name,int numInStock, double price,  int min, int max, int machineID) {
+        super(partID, name, numInStock, price,  min, max);
+        this.machineID = machineID;
+
+    }
+
+    //getters
+    public int getMachineID() {
+
+        return machineID;
+    }
+    //setters
+    public void setMachineID(int id) {
+
+        this.machineID = id;
+    }
+}
+
